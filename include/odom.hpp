@@ -68,12 +68,16 @@ public:
                 mm ds = lat_wheel->get_delta();
                 mm dr = para_wheel->get_delta();
 
+                printf("Ds: %f\n", (double)ds);
+
                 deg h = heading.load();
                 if (h == INFINITY)
                 {
                         printf("Heading not valid.\n");
                         return;
                 }
+
+                printf("h: %f\n", (double)h);
 
                 rad theta = h;
 
@@ -87,9 +91,12 @@ public:
                         ddlx = ds;
                         ddly = dr;
                 } else {
-                        ddlx = 2 * std::sin(dtheta / 2) * ((ds / (dtheta)) + lat_wheel->get_offset<mm>());
-                        ddly = 2 * std::sin(dtheta / 2) * ((dr / (dtheta)) + para_wheel->get_offset<mm>());
+                        ddlx = 2 * std::sin(dtheta / 2.0) * ((ds / (dtheta)) + lat_wheel->get_offset<mm>());
+                        ddly = 2 * std::sin(dtheta / 2.0) * ((dr / (dtheta)) + para_wheel->get_offset<mm>());
                 }
+
+                printf("ddlx: %f\n", (double)ddlx);
+
 
                 rad thetam = last_theta + (rad)(dtheta / 2);
 
