@@ -79,20 +79,20 @@ void run_script(void* params) {
 }
 
 ObjFunction* init_tp() {
-        printf("🐍 Initing Taipan...\n");
+        printf("Initing Taipan...\n");
 
-        printf("🐍 Initing VM... ");
+        printf("Initing VM... ");
         init_VM();
         printf("inited.\n");
 
 
 #ifdef USE_CUSTOM_MEMORY
-        printf("🐍 Inited memory manager... ");
+        printf("Inited memory manager... ");
         init_mem_manager();
         printf("inited.\n");
 #endif
 
-        printf("🐍 Inited Bootloader... ");
+        printf("Inited Bootloader... ");
         init_bootloader();
         printf("inited.\n");
 
@@ -101,12 +101,12 @@ ObjFunction* init_tp() {
 
         switch (result) {
                 case AFT_NONE:
-                        printf("🐍 No auton script found.\n");
-                        printf("🐍 Skipping auton...\n"); // could fallback to builtin default
+                        printf("No auton script found.\n");
+                        printf("Skipping auton...\n"); // could fallback to builtin default
                         return NULL;
 
                 case AFT_ASDF:
-                        printf("🐍 Compiling 'auton.asdf'... ");
+                        printf("Compiling 'auton.asdf'... ");
                         ObjFunction* compiled = compile_file(path);
                         printf("compiled.\n");
                         return compiled;

@@ -12,11 +12,11 @@ class value {
 public:
         constexpr value(void) {
                 _internal = 0;
-                this_ratio = conversion_factor::num / conversion_factor::den;
+                this_ratio = static_cast<double>(conversion_factor::num) / conversion_factor::den;
         }
 
         constexpr value(internal_type v) : _internal(v) {
-                this_ratio = conversion_factor::num / conversion_factor::den;
+                this_ratio = static_cast<double>(conversion_factor::num) / conversion_factor::den;
         }
 
         template <typename other_ratio>
@@ -62,16 +62,16 @@ using angle = value<_angle, double, ratio>;
 
 using mm = length<std::ratio<1>>; // using millis as base unit
 using meters = length<std::ratio<1000, 1>>;
-using in = length<std::ratio<10, 254>>;
-using ft = length<std::ratio<10, 254 * 12>>;
+using in = length<std::ratio<254, 10>>;
+using ft = length<std::ratio<254 * 12, 10>>;
 
 using asdf_sec = asdf_time<std::ratio<1000, 1>>;
 using asdf_msec = asdf_time<std::ratio<1>>; // msec is base, as above
 
 using rad = angle<std::ratio<1>>; // #radian_primacy
-using deg = angle<std::ratio<57296, 1000>>;
-using cdeg = angle<std::ratio<57296, 10000>>;
-using rot = angle<std::ratio<628318, 100000>>;
+using deg = angle<std::ratio<174533, 10000000>>;
+using cdeg = angle<std::ratio<174533, 1000000000>>;
+using rot = angle<std::ratio<6283185, 1000000>>;
 
 // based on https://en.cppreference.com/cpp/language/user_literal
 mm operator"" _mm(long double val) {

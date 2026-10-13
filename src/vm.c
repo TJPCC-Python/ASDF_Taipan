@@ -617,7 +617,7 @@ static InterpretResult run(void* abort_flag, void* main_handle, void* vm_clean) 
                                 motor_move(motor_right_rear, -turn_diff);
                                 break;
                         }
-                        case rOP_MOTOR_SPIN:
+                        case rOP_MOTOR_SPIN: {
                                 Value mpower = pop();
                                 Value port = pop();
                                 if (!IS_PORT(port))
@@ -627,6 +627,7 @@ static InterpretResult run(void* abort_flag, void* main_handle, void* vm_clean) 
 
                                 motor_move(AS_PORT(port), AS_NUMBER(mpower));
                                 break;
+                        }
                         case rOP_MOTOR_GROUP_SPIN: {
                                 break; // TODO:
                         }

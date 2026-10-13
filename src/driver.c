@@ -80,6 +80,8 @@ static float clamp(float v, float minv, float maxv) {
         return fmax(v, fmin(v, maxv));
 }
 
+
+// A pretty simple single-stick arcade drive control homebrewed by our team
 void driver_apply_dt_input() {
         double steering_coeff = 0.85;
         do {
@@ -88,7 +90,7 @@ void driver_apply_dt_input() {
 
                 int axis_v = atomic_load(&ct_status.axis_left_y);
 
-\
+
                 if (abs(axis_h) < stick_deadzone_factor) axis_h = 0;
                 if (abs(axis_v) < stick_deadzone_factor) axis_v = 0;
 
@@ -110,6 +112,14 @@ void driver_apply_dt_input() {
                 delay(9);
         } while (true);
 }
+
+// Our implementation of the 'Curvature Drive' or 'Cheesy Drive' arcade drive control
+// Original source https://wiki.purduesigbots.com/software/robotics-basics/curvature-cheesy-drive
+// Non-linearlity experimentation https://www.desmos.com/calculator/vuvhyxhsq1
+void driver_apply_cheesy_input() {
+        bool is_turning_in_place = false;
+        double linear_comp = atomic_load(&ct_status.axis_left_y);
+} 
 
 void driver_apply_lift_input() {
         motor_set_brake_mode(motor_lift_a, E_MOTOR_BRAKE_BRAKE);

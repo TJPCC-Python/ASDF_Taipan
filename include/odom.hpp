@@ -10,25 +10,25 @@
 
 #include <inttypes.h>
 #include <memory>
+#include <cmath>
 
 extern "C" {
 #include "api.h"
 #include "hardware.h"
 };
 
-// #define cD2rots (1.0 / 36000.0)
-#define cD2rots 2.777778E-5
+constexpr double cD2rots = 1.0 / 36000.0;
 
 
 class tracking_wheel {
 public:
         template<typename radius_unit = mm, typename offset_unit = mm>
         tracking_wheel(int8_t port, radius_unit radius, offset_unit offset) 
-        : offset(offset) { 
+        : circ(2.0 * M_PI * mm(radius).internal()), offset(offset) {
                 wheel = std::make_unique<pros::Rotation>(port);
                 wheel->set_position(0);
 
-                circ = M_PI * radius * radius;
+                last_p = wheel->get_position();
         }
 
         ~tracking_wheel() {};
@@ -36,10 +36,16 @@ public:
         template<typename T = mm>
         T get_delta() {
                 cdeg pos = wheel->get_position();
+
+                printf("pos %.0f\n", pos.internal());
                 cdeg raw_delta = pos - last_p;
                 last_p = pos;
 
-                return (T)(raw_delta * cD2rots * circ);
+
+                printf("raw delta: %.0f\n", raw_delta.internal());
+                mm final_result = mm(raw_delta.internal() * cD2rots * circ.internal());
+                printf("calced delta: %f\n", final_result.internal());
+                return (T)final_result;
         }
 
         template<typename T = mm>
@@ -50,7 +56,7 @@ public:
 private:
         std::unique_ptr<pros::Rotation> wheel;
         cdeg last_p;
-        mm circ;
+        const mm circ;
         mm offset;
 };
 
@@ -68,35 +74,31 @@ public:
                 mm ds = lat_wheel->get_delta();
                 mm dr = para_wheel->get_delta();
 
-                printf("Ds: %f\n", (double)ds);
+                printf("lat_pos: %f\n", ds.internal());
+                printf("para_pos: %f\n", dr.internal());
 
                 deg h = heading.load();
-                if (h == INFINITY)
+                if (!std::isfinite(h))
                 {
                         printf("Heading not valid.\n");
                         return;
                 }
 
-                printf("h: %f\n", (double)h);
+                rad theta = (rad)h;
 
-                rad theta = h;
-
-                rad dtheta = theta - last_theta;
+                rad dtheta = theta - last_theta; // TODO: normalise angle
 
                 last_theta = theta;
 
                 mm ddlx;
                 mm ddly;
-                if (abs(dtheta) <= 0) {
+                if (abs(static_cast<double>(dtheta)) <= 0.01) {
                         ddlx = ds;
                         ddly = dr;
                 } else {
                         ddlx = 2 * std::sin(dtheta / 2.0) * ((ds / (dtheta)) + lat_wheel->get_offset<mm>());
                         ddly = 2 * std::sin(dtheta / 2.0) * ((dr / (dtheta)) + para_wheel->get_offset<mm>());
                 }
-
-                printf("ddlx: %f\n", (double)ddlx);
-
 
                 rad thetam = last_theta + (rad)(dtheta / 2);
 

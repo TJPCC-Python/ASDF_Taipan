@@ -15,8 +15,6 @@ extern "C" {
 #include "vm.h"
 };
 
-
-
 // #include "IPositionable.hpp"
 // #include "navigator.hpp"
 #include "navigator.hpp"
@@ -24,8 +22,8 @@ extern "C" {
 #include <fstream>
 #include <functional>
 
-tracking_wheel lat_wheel = tracking_wheel(odom_perp, 2.0_in, 0.0_mm); // TODO: check offsets
-tracking_wheel para_wheel = tracking_wheel(odom_para, 2.0_in, 0.0_mm);
+tracking_wheel lat_wheel = tracking_wheel(odom_perp, 2.0_in, 1.4_mm); // TODO: check offsets
+tracking_wheel para_wheel = tracking_wheel(odom_para, 2.0_in, 5.5_mm);
 
 straight_odom_2_wheel odom_sys(lat_wheel, para_wheel);
 
