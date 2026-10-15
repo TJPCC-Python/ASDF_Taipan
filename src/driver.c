@@ -81,26 +81,26 @@ static float clamp(float v, float minv, float maxv) {
 }
 
 
-#include scale
+#include "easings.h"
 
 // A pretty simple single-stick arcade drive control homebrewed by our team
 void driver_apply_dt_input() {
-        double steering_coeff = 0.85;
+        double steering_coeff = 0.70;
+
         do {
                 // Deadzones
                 float axis_h = clamp(atomic_load(&ct_status.axis_right_x) * steering_coeff /* + atomic_load(&ct_status.axis_left_x) */, -127, 127);
 
                 float axis_v = atomic_load(&ct_status.axis_left_y);
 
-                
-                
+
                 if (abs(axis_h) < stick_deadzone_factor) axis_h = 0;
                 if (abs(axis_v) < stick_deadzone_factor) axis_v = 0;
-                
-                float axis_h_raw = axis_h / 127.0f;
-                float axis_v_raw = axis_r / 127.0f;
 
-                axis_h = 127.0f *  axis_h_raw
+                // float axis_h_raw = axis_h / 127.0f;
+                // float axis_v_raw = axis_v / 127.0f;
+
+                // axis_v = 127.0f * ease_in_cubic_boosted(axis_v_raw, 0.02);
 
                 float dt_left = axis_v + axis_h;
                 float dt_right = axis_v - axis_h;
@@ -127,7 +127,7 @@ void driver_apply_dt_input() {
 void driver_apply_cheesy_input() {
         bool is_turning_in_place = false;
         double linear_comp = atomic_load(&ct_status.axis_left_y);
-} 
+}
 
 void driver_apply_lift_input() {
         motor_set_brake_mode(motor_lift_a, E_MOTOR_BRAKE_BRAKE);
@@ -176,11 +176,11 @@ void driver_apply_lift_input() {
                 // }
 
                 if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_R1))
-                motor_move(motor_claw, 127.0);
-        else if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_R2))
-                motor_move(motor_claw, -127.0);
-        else
-                motor_move(motor_claw, 0.0);
+                        motor_move(motor_claw, 127.0);
+                else if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_R2))
+                        motor_move(motor_claw, -127.0);
+                else
+                        motor_move(motor_claw, 0.0);
 
                 lift_delay -= (11.0 / 1000.0);
 

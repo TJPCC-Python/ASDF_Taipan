@@ -133,6 +133,9 @@ void initialize() {
 
         calibrate_imu();
 
+        lat_wheel.init_tracking_wheel();
+        para_wheel.init_tracking_wheel();
+
         pros::Task odom_tracker_task(odom_task_wrapper, "ODOM TRACKER");
         printf("x: %f y: %f\n", odom_sys.get_position().x, odom_sys.get_position().y);
         // exit(0);

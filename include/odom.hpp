@@ -22,16 +22,19 @@ constexpr double cD2rots = 1.0 / 36000.0;
 
 class tracking_wheel {
 public:
-        template<typename radius_unit = mm, typename offset_unit = mm>
-        tracking_wheel(int8_t port, radius_unit radius, offset_unit offset) 
-        : circ(2.0 * M_PI * mm(radius).internal()), offset(offset) {
+        tracking_wheel(int8_t port, in radius, mm offset)
+                : circ(2.0 * M_PI * mm(radius).internal()), offset(offset), port(port) {}
+
+        ~tracking_wheel() {};
+
+        void init_tracking_wheel() {
                 wheel = std::make_unique<pros::Rotation>(port);
                 wheel->set_position(0);
 
                 last_p = wheel->get_position();
+                printf("posi %.0f\n", last_p.internal());
+                printf("wheel_pointer: %xu\n", wheel.get());
         }
-
-        ~tracking_wheel() {};
 
         template<typename T = mm>
         T get_delta() {
@@ -58,6 +61,7 @@ private:
         cdeg last_p;
         const mm circ;
         mm offset;
+        int port;
 };
 
 class straight_odom_2_wheel : public sensor_sys { // Make an arc_odom
