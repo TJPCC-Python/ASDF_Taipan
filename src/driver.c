@@ -81,21 +81,29 @@ static float clamp(float v, float minv, float maxv) {
 }
 
 
+#include scale
+
 // A pretty simple single-stick arcade drive control homebrewed by our team
 void driver_apply_dt_input() {
         double steering_coeff = 0.85;
         do {
                 // Deadzones
-                int axis_h = clamp(atomic_load(&ct_status.axis_right_x) * steering_coeff /* + atomic_load(&ct_status.axis_left_x) */, -127, 127);
+                float axis_h = clamp(atomic_load(&ct_status.axis_right_x) * steering_coeff /* + atomic_load(&ct_status.axis_left_x) */, -127, 127);
 
-                int axis_v = atomic_load(&ct_status.axis_left_y);
+                float axis_v = atomic_load(&ct_status.axis_left_y);
 
-
+                
+                
                 if (abs(axis_h) < stick_deadzone_factor) axis_h = 0;
                 if (abs(axis_v) < stick_deadzone_factor) axis_v = 0;
+                
+                float axis_h_raw = axis_h / 127.0f;
+                float axis_v_raw = axis_r / 127.0f;
 
-                int dt_left = axis_v + axis_h;
-                int dt_right = axis_v - axis_h;
+                axis_h = 127.0f *  axis_h_raw
+
+                float dt_left = axis_v + axis_h;
+                float dt_right = axis_v - axis_h;
 
 
                 motor_move(motor_left_front, dt_left);

@@ -7,39 +7,31 @@
 
 #include <math.h>
 
-class easing {
-        const inline virtual double get(double t) = 0;
-};
+#define turn_nonlinearity 0.8
 
-class ease_in_cubic : public easing {
-        const inline double get(double t) override {
-                return t * t * t;
-        }
-};
+const inline double ease_in_cubic(double t) {
+        return t * t * t;
+}
 
-class ease_in_circ : public easing {
-        const inline double get(double t) override {
-                return 1 - sqrt(1 - pow(t, 2));
-        }
-};
+const inline double ease_in_cubic_boosted(double t, double boost_factor) {
+        return (t * t * t) + boost_factor;
+}
 
-class ease_in_quint : public easing {
-        const inline double get(double t) override {
-                return t * t * t * t * t;
-        }
-};
+const inline double ease_in_circ(double t) {
+        return 1 - sqrt(1 - pow(t, 2));
+}
 
-class ease_cheesy : public easing {
-        const inline double get(double t) override {
-                double denom = sin(M_PI_2 * turn_nonlinearity);
-                double first_remap = sin(M_PI_2 * turn_nonlinearity * t) / denom;
-                double second_remap = sin(M_PI_2 * turn_nonlinearity * first_remap) / denom;
+const inline double ease_in_quint(double t) {
+        return t * t * t * t * t;
+}
 
-                return second_remap;
-        }
+const inline double ease_cheesy(double t) {
+        double denom = sin(M_PI_2 * turn_nonlinearity);
+        double first_remap = sin(M_PI_2 * turn_nonlinearity * t) / denom;
+        double second_remap = sin(M_PI_2 * turn_nonlinearity * first_remap) / denom;
 
-        private:
-        double turn_nonlinearity = 0.8;
-};
+        return second_remap;
+}
+
 
 #endif
