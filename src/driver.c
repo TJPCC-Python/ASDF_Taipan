@@ -97,10 +97,12 @@ void driver_apply_dt_input() {
                 if (abs(axis_h) < stick_deadzone_factor) axis_h = 0;
                 if (abs(axis_v) < stick_deadzone_factor) axis_v = 0;
 
-                // float axis_h_raw = axis_h / 127.0f;
-                // float axis_v_raw = axis_v / 127.0f;
+#ifdef USE_CURVES
+                float axis_h_raw = axis_h / 127.0f;
+                float axis_v_raw = axis_v / 127.0f;
 
-                // axis_v = 127.0f * ease_in_cubic_boosted(axis_v_raw, 0.02);
+                axis_v = 127.0f * ease_in_cubic_boosted(axis_v_raw, 0.02);
+#endif
 
                 float dt_left = axis_v + axis_h;
                 float dt_right = axis_v - axis_h;
@@ -114,9 +116,6 @@ void driver_apply_dt_input() {
                 motor_move(motor_right_mid, dt_right);
                 motor_move(motor_right_rear, dt_right);
 
-                // set_motor_group_wrapper(robot_hardware.MOTORGROUP_L, dt_left);
-                // set_motor_group_wrapper(robot_hardware.MOTORGROUP_R, dt_right);
-
                 delay(9);
         } while (true);
 }
@@ -127,6 +126,8 @@ void driver_apply_dt_input() {
 void driver_apply_cheesy_input() {
         bool is_turning_in_place = false;
         double linear_comp = atomic_load(&ct_status.axis_left_y);
+
+        // TODO:
 }
 
 void driver_apply_lift_input() {

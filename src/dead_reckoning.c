@@ -15,24 +15,24 @@ lang_agn_atomic_int curr_y;
 #define DT_WHEEL_CIRCUM M_PI * 2 * DT_WHEEL_RAD; // TODO: check
 
 vec2 get_pos(void) {
-        vec2 out;
-        out.x = atomic_load(&curr_x);
-        out.y = atomic_load(&curr_y);
+        // vec2 out;
+        // out.x = atomic_load(&curr_x);
+        // out.y = atomic_load(&curr_y);
 
-        return out;
+        // return out;
 }
 
 static void init_dead_reckoner(void) {
-        atomic_store(&curr_x, 0);
-        atomic_store(&curr_y, 0);
+        // atomic_store(&curr_x, 0);
+        // atomic_store(&curr_y, 0);
 
-        motor_set_encoder_units(motor_left_front, E_MOTOR_ENCODER_ROTATIONS);
-        motor_set_encoder_units(motor_left_mid, E_MOTOR_ENCODER_ROTATIONS);
-        motor_set_encoder_units(motor_left_rear, E_MOTOR_ENCODER_ROTATIONS);
+        // motor_set_encoder_units(motor_left_front, E_MOTOR_ENCODER_ROTATIONS);
+        // motor_set_encoder_units(motor_left_mid, E_MOTOR_ENCODER_ROTATIONS);
+        // motor_set_encoder_units(motor_left_rear, E_MOTOR_ENCODER_ROTATIONS);
 
-        motor_set_encoder_units(motor_right_front, E_MOTOR_ENCODER_ROTATIONS);
-        motor_set_encoder_units(motor_right_mid, E_MOTOR_ENCODER_ROTATIONS);
-        motor_set_encoder_units(motor_right_rear, E_MOTOR_ENCODER_ROTATIONS);
+        // motor_set_encoder_units(motor_right_front, E_MOTOR_ENCODER_ROTATIONS);
+        // motor_set_encoder_units(motor_right_mid, E_MOTOR_ENCODER_ROTATIONS);
+        // motor_set_encoder_units(motor_right_rear, E_MOTOR_ENCODER_ROTATIONS);
 }
 
 static float av_motor_pos(void) {
@@ -45,28 +45,28 @@ static float av_motor_pos(void) {
 }
 
 void dead_reckoning_position_tracker(void) {
-        init_dead_reckoner();
+        // init_dead_reckoner();
 
-        float cx, cy, dx, dy, d, last_d, theta;
+        // float cx, cy, dx, dy, d, last_d, theta;
 
-        do {
-                d = av_motor_pos();
+        // do {
+        //         d = av_motor_pos();
 
-                d *= DT_WHEEL_CIRCUM;
+        //         d *= DT_WHEEL_CIRCUM;
 
-                theta = atomic_load(&heading);
+        //         theta = atomic_load(&heading);
 
-                dx = d * asin(theta);
-                dy = d * acos(theta);
+        //         dx = d * asin(theta);
+        //         dy = d * acos(theta);
 
-                cx += dx;
-                cy += dy;
+        //         cx += dx;
+        //         cy += dy;
 
-                atomic_store(&curr_x, cx);
-                atomic_store(&curr_y, cy);
+        //         atomic_store(&curr_x, cx);
+        //         atomic_store(&curr_y, cy);
 
-                last_d = d;
+        //         last_d = d;
 
-                delay(4);
-        } while (true);
+        //         delay(4);
+        // } while (true);
 }

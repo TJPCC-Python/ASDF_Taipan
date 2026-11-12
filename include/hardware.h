@@ -54,12 +54,12 @@ typedef enum {
         motor_left_mid = 12,
         motor_left_rear = -13,
 
-        motor_right_front = 20,
+       motor_right_front = 20,
         motor_right_mid = -19,
         motor_right_rear = 18,
 
-        motor_lift_a = 1, // right
-        motor_lift_b = -10,
+        motor_lift_a = 2, // right
+        motor_lift_b = -7,
         motor_claw = 8,
 
         imu_port = 15,
@@ -79,6 +79,7 @@ static const int8_t DT_MOTOR_PORTS[DT_MOTOR_C] = {
 
 typedef enum {
         lim_switch_lift = 1,
+        claw = 6,
 } adi_ports;
 
 typedef struct

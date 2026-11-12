@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "Invictu",
+    "project_name": "States",
     "target": "v5",
     "templates": {
       "kernel": {

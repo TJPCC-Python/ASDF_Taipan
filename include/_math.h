@@ -4,7 +4,7 @@
 #include "auton.h"
 #include <math.h>
 
-#define RAD2DEG (M_PI / 180)
+#define RAD2DEG (180 / M_PI)
 
 static float get_mag(vec2 v) {
         return sqrt(v.x * v.x + v.y * v.y);
@@ -18,7 +18,7 @@ static float shd(float h1, float h2) { // signed heading difference
 }
 
 static float argd(vec2 v) {
-        return atan(v.x / v.y) * RAD2DEG;
+        return atan2(v.y, v.x) * RAD2DEG;
 }
 
 static float clamp(float v, float minv, float maxv) {

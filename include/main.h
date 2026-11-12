@@ -68,7 +68,7 @@ extern "C" {
         #define HARDWARE_BUILD // NOT IMPLEMENTED | build for the vex brain, if off then build for my computer
         // #define USE_TAIPAN
         // #define USE_INI_LOADER
-        #define SAVE_ODOM_TRACK
+        // #define SAVE_ODOM_TRACK
 
         //#define SKILLS
 

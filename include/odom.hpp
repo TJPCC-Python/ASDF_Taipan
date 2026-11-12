@@ -22,8 +22,8 @@ constexpr double cD2rots = 1.0 / 36000.0;
 
 class tracking_wheel {
 public:
-        tracking_wheel(int8_t port, in radius, mm offset)
-                : circ(2.0 * M_PI * mm(radius).internal()), offset(offset), port(port) {}
+        tracking_wheel(int8_t port, double radius, double offset)
+                : circ(2.0 * M_PI * radius), offset(offset), port(port) {}
 
         ~tracking_wheel() {};
 
@@ -32,35 +32,33 @@ public:
                 wheel->set_position(0);
 
                 last_p = wheel->get_position();
-                printf("posi %.0f\n", last_p.internal());
+                printf("posi %.0f\n", last_p);
                 printf("wheel_pointer: %xu\n", wheel.get());
         }
 
-        template<typename T = mm>
-        T get_delta() {
-                cdeg pos = wheel->get_position();
+        double get_delta() {
+                double pos = wheel->get_position();
 
-                printf("pos %.0f\n", pos.internal());
-                cdeg raw_delta = pos - last_p;
+                double raw_delta = pos - last_p;
                 last_p = pos;
 
-
-                printf("raw delta: %.0f\n", raw_delta.internal());
-                mm final_result = mm(raw_delta.internal() * cD2rots * circ.internal());
-                printf("calced delta: %f\n", final_result.internal());
-                return (T)final_result;
+                double final_result = raw_delta * cD2rots * circ;
+                return final_result;
         }
 
-        template<typename T = mm>
-        T get_offset() {
+        double get_offset() {
                 return offset;
+        }
+
+        double get_total_length() {
+                return wheel->get_position() * cD2rots * circ;
         }
 
 private:
         std::unique_ptr<pros::Rotation> wheel;
-        cdeg last_p;
-        const mm circ;
-        mm offset;
+        double last_p;
+        const double circ;
+        double offset;
         int port;
 };
 
@@ -75,55 +73,60 @@ public:
         };
 
         void calc_position() override {
-                mm ds = lat_wheel->get_delta();
-                mm dr = para_wheel->get_delta();
+                double ds = -lat_wheel->get_delta();
+                double dr = -para_wheel->get_delta();
 
-                printf("lat_pos: %f\n", ds.internal());
-                printf("para_pos: %f\n", dr.internal());
+                // printf("lat_pos: %f\n", ds);
+                // printf("para_pos: %f\n", dr);
 
-                deg h = heading.load();
+                double h = heading.load();
                 if (!std::isfinite(h))
                 {
                         printf("Heading not valid.\n");
                         return;
                 }
 
-                rad theta = (rad)h;
+                double theta = h * (M_PI / 180.0f);
+                while (theta > M_PI) theta -= M_TWOPI;
+                while (theta < -M_PI) theta += M_TWOPI;
 
-                rad dtheta = theta - last_theta; // TODO: normalise angle
+                double dtheta = theta - last_theta; // TODO: normalise angle
 
-                last_theta = theta;
-
-                mm ddlx;
-                mm ddly;
-                if (abs(static_cast<double>(dtheta)) <= 0.01) {
+                double ddlx;
+                double ddly;
+                if (fabs(dtheta) <= 0.01f) {
                         ddlx = ds;
                         ddly = dr;
                 } else {
-                        ddlx = 2 * std::sin(dtheta / 2.0) * ((ds / (dtheta)) + lat_wheel->get_offset<mm>());
-                        ddly = 2 * std::sin(dtheta / 2.0) * ((dr / (dtheta)) + para_wheel->get_offset<mm>());
+                        ddlx = 2 * std::sin(dtheta / 2.0) * ((dr / (dtheta)) + para_wheel->get_offset());
+                        ddly = 2 * std::sin(dtheta / 2.0) * ((ds / (dtheta)) + lat_wheel->get_offset());
                 }
 
-                rad thetam = last_theta + (rad)(dtheta / 2);
+                double thetam = last_theta + (dtheta / 2);
 
                 // rotate by -thetam to get to global position space
-                mm ddx = ddlx * std::cos(thetam) - ddly * std::sin(thetam);
-                mm ddy = ddlx * std::sin(thetam) + ddly * std::cos(thetam);
+                double ddx = ddlx * std::cos(thetam) - ddly * std::sin(thetam);
+                double ddy = ddlx * std::sin(thetam) + ddly * std::cos(thetam);
+
+                last_theta = theta;
 
                 x.store(x.load() + ddx);
                 y.store(y.load() + ddy);
+
+                curr_x.store(x.load());
+                curr_y.store(y.load());
         }
 
 private:
         tracking_wheel* lat_wheel;
         tracking_wheel* para_wheel;
 
-        mm last_s = 0;
-        mm last_r = 0;
-        rad last_theta = 0;
+        double last_s = 0;
+        double last_r = 0;
+        double last_theta = 0;
 
-        mm offset_s = -60.0;
-        mm offset_r = -10.0;
+        double offset_s = -60.0;
+        double offset_r = -10.0;
 };
 
 #endif

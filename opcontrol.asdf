@@ -1,12 +1,37 @@
-while (true) {
-        var input_y = get_stick_position(3);
-        var input_x = get_stick_position(4);
+drivetrain 4 5 6 | 7 8 9;
+motorgroup right_dt_mg 7 8 9;
+drive_pid 12.0 0.01 0.11;
 
+subroutine make_positive(value) {
+        if (value < 0)
+                return -value;
+        return value;
+}
+
+while (forever) {
+
+
+        axis_h = get_stick_position(3);
+        axis_v = get_stick_position(4);
+
+        if (make_positive(axis_h) < stick_deadzone_factor) {
+                axis_h = 0;
+        }
+
+        if (make_positive(axis_v) < stick_deadzone_factor) {
+                axis_v = 0;
+        }
+
+        // Option A
         if (input_x == 0) {
                 dt_spin input_y;
         } else {
                 dt_turn input_x;
         }
+
+        // Option B
+        dt_left.power(axis_v + axis_h);
+        right_dt_mg.power(axis_v - axis_h);
 
         delay(50);
 }
