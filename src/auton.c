@@ -16,43 +16,35 @@ static int sgn(float v) {
 
 void set_motors_brake() {
         motor_set_brake_mode(motor_left_front, E_MOTOR_BRAKE_BRAKE);
-        motor_set_brake_mode(motor_left_mid, E_MOTOR_BRAKE_BRAKE);
         motor_set_brake_mode(motor_left_rear, E_MOTOR_BRAKE_BRAKE);
 
         motor_set_brake_mode(motor_right_front, E_MOTOR_BRAKE_BRAKE);
-        motor_set_brake_mode(motor_right_mid, E_MOTOR_BRAKE_BRAKE);
         motor_set_brake_mode(motor_right_rear, E_MOTOR_BRAKE_BRAKE);
 }
 
 void unset_motors_brake() {
         motor_set_brake_mode(motor_left_front, E_MOTOR_BRAKE_COAST);
-        motor_set_brake_mode(motor_left_mid, E_MOTOR_BRAKE_COAST);
         motor_set_brake_mode(motor_left_rear, E_MOTOR_BRAKE_COAST);
 
         motor_set_brake_mode(motor_right_front, E_MOTOR_BRAKE_COAST);
-        motor_set_brake_mode(motor_right_mid, E_MOTOR_BRAKE_COAST);
         motor_set_brake_mode(motor_right_rear, E_MOTOR_BRAKE_COAST);
 }
 
 #define SPIN_DT_MOTORS(power_l, power_r) \
         do { \
                 motor_move(motor_left_front, (power_l)); \
-                motor_move(motor_left_mid, (power_l)); \
                 motor_move(motor_left_rear, (power_l)); \
         \
                 motor_move(motor_right_front, (power_r)); \
-                motor_move(motor_right_mid, (power_r)); \
                 motor_move(motor_right_rear, (power_r)); \
         } while (0);
 
 #define BRAKE_DT_MOTORS() \
         do { \
                 motor_brake(motor_left_front); \
-                motor_brake(motor_left_mid); \
                 motor_brake(motor_left_rear); \
         \
                 motor_brake(motor_right_front); \
-                motor_brake(motor_right_mid); \
                 motor_brake(motor_right_rear); \
         } while (0)
 
@@ -209,21 +201,21 @@ static vec2 desaturate_power(float lat, float ang) {
         return out;
 }
 
-static float calc_angle_err(struct auton_turn_target target) {
+static float calc_angle_err(struct auton_turn_target target, const enum turn_dir dir) {
         if (target.is_position) return ANGLE_TO(target.as.position);
-        else return get_angle_err(target.as.heading, atomic_load(&heading), TURN_NONE);
+        else return get_angle_err(target.as.heading, atomic_load(&heading), dir);
 }
 
 static enum slew_direction get_slew_dir(struct auton_turn_target target) {
         if (target.dir == TURN_CCW) return SLEW_INCREASING;
         if (target.dir == TURN_CW) return SLEW_DECREASING;
 
-        float error = calc_angle_err(target);
+        float error = calc_angle_err(target, TURN_NONE);
         if (error > 0) return SLEW_INCREASING;
         else return SLEW_DECREASING;
 }
 
-struct motor_brake_set {
+static struct motor_brake_set {
         motor_brake_mode_e_t lf;
         motor_brake_mode_e_t lr;
 
@@ -242,10 +234,41 @@ static void get_motor_brake_status(struct motor_brake_set* brake_status) {
 }
 
 static void set_motor_brake_status(struct motor_brake_set brake_status) {
+        motor_set_brake_mode(motor_left_front, brake_status.lf);
+        motor_set_brake_mode(motor_left_rear, brake_status.lr);
 
+        motor_set_brake_mode(motor_right_front, brake_status.rf);
+        motor_set_brake_mode(motor_right_rear, brake_status.rr);
 };
 
-void improved_auton_turn(struct auton_turn_target target, struct p2p_command_data cmd, struct p2p_params params) {
+static float get_dtheta(const struct auton_turn_target target, bool* is_settling, float* prev_raw_dtheta, float* prev_dtheta, bool* is_prev_raw_dtheta, bool* is_prev_dtheta, const enum turn_dir dir) {
+        const float raw = calc_angle_err(target, TURN_NONE);
+        *is_settling = is_prev_raw_dtheta && (sgn(raw) != sgn(*prev_raw_dtheta));
+        *prev_raw_dtheta = raw;
+        *is_prev_raw_dtheta = true;
+        const float error = calc_angle_err(target, *is_settling ? TURN_NONE : dir);
+        if (!is_prev_dtheta) {
+                *prev_dtheta = error;
+                *is_prev_dtheta = true;
+        }
+        return error;
+}
+
+static float constrain_power(float power, float min, float max) {
+        if (fabs(power) < min) power = sgn(power) * min;
+        power = clamp(power, -max, max);
+        return power;
+
+}
+
+static float get_power(float dtheta, bool is_settling, float prev_motor_power, struct turn_params params, enum slew_direction slew_dir) {
+        float raw = pid_data_update(params.turn_pid, dtheta);
+        if (!is_settling) raw = directional_slew(raw, prev_motor_power, params.slew, params.dt, slew_dir);
+        return constrain_power(raw, params.min_speed, params.max_speed);
+}
+
+// TODO: Make everything const
+void improved_auton_turn(struct auton_turn_target target, struct auton_command_data cmd, struct turn_params params) {
         // TODO: reset structs
 
         const enum slew_direction slew_dir = get_slew_dir(target);
@@ -259,11 +282,54 @@ void improved_auton_turn(struct auton_turn_target target, struct p2p_command_dat
         bool is_settling = false;
         float prev_motor_power = 0;
 
-        // Restore the brake modes of the motors
-        const motor_brake_mode_e_t left_brake_mode = motor_get_brake_mode(motor_left_mid);
+        // Save the brake modes of the motors for later restoration
+        struct motor_brake_set brake_status;
+        get_motor_brake_status(&brake_status);
+        if (target.lock_side) {
+                if (target.lock_side == LOCKED_LEFT) {
+                        motor_set_brake_mode(motor_left_front, E_MOTOR_BRAKE_BRAKE);
+                        motor_set_brake_mode(motor_left_rear, E_MOTOR_BRAKE_BRAKE);
+                } else {
+                        motor_set_brake_mode(motor_right_front, E_MOTOR_BRAKE_BRAKE);
+                        motor_set_brake_mode(motor_right_rear, E_MOTOR_BRAKE_BRAKE);
+                }
+        }
+
+        const float start_millis = millis();
+
+        while (!is_time_expired(start_millis, cmd.timeout_millis) && !within_range_for_time(dtheta, params.turn_exit_range_data)) {
+                dtheta = get_dtheta(target, &is_settling, &prev_raw_dtheta, &prev_dtheta, &has_prev_raw_dtheta, &has_prev_dtheta, target.dir);
+
+                if (params.min_speed != 0)
+                        if (fabs(dtheta) < params.exit_range) break;
+                        else if (sgn(dtheta) != sgn(prev_dtheta)) break;
+
+                prev_dtheta = dtheta;
+                has_prev_dtheta = true;
+
+                const float motor_power = get_power(dtheta, is_settling, prev_motor_power, params, slew_dir);
+
+                prev_motor_power = motor_power;
+
+                SPIN_DT_MOTORS(-motor_power, motor_power);
+                if (target.lock_side) {
+                        if (target.lock_side == LOCKED_LEFT) {
+                                motor_brake(dt_left_front);
+                                motor_brake(dt_left_rear);
+                        } else {
+                                motor_brake(dt_right_front);
+                                motor_brake(dt_right_rear);
+                        }
+                }
+
+                delay(params.dt);
+        }
+
+        set_motor_brake_status(brake_status);
+        BRAKE_DT_MOTORS();
 }
 
-void improved_point_to_point(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params) {
+void improved_point_to_point(vec2 target_pos, struct auton_command_data cmd, struct p2p_params params) {
         if (params.lat_exit_range_data != NULL) {
                 params.lat_exit_range_data->start_time = -1;
                 params.lat_exit_range_data->is_done = false;

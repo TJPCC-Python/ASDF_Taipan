@@ -48,10 +48,10 @@ typedef enum {
 } dt_motors;
 
 typedef enum {
-        motor_left_front = -11,
+        motor_left_front = -12,
         motor_left_rear = -13,
 
-       motor_right_front = 20,
+        motor_right_front = 29,
         motor_right_rear = 18,
 
         motor_lift_a = 2, // right
@@ -64,11 +64,9 @@ typedef enum {
 
 static const int8_t DT_MOTOR_PORTS[DT_MOTOR_C] = {
         [dt_left_front] = motor_left_front,
-        [dt_left_mid] = motor_left_mid,
         [dt_left_rear] = motor_left_rear,
 
         [dt_right_front] = motor_right_front,
-        [dt_right_mid] = motor_right_mid,
         [dt_right_rear] = motor_right_rear
 };
 

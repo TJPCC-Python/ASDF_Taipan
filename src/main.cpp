@@ -209,11 +209,15 @@ void autonomous() {
 
                 init_claw();
 
+
+
+
                 struct p2p_params ip2p_params;
                 struct within_range_data lat_range_data;
                 initialise_within_range_data(&lat_range_data);
                 lat_range_data.range = 5.0f; // if within 10 mms for 100 msec  //TODO:
-                lat_range_data.time = 200.0f; //TODO:
+                lat_range_data.time = 100.0f; //TODO:
+
 
                 ip2p_params.lat_exit_range_data = &lat_range_data;
                 ip2p_params.exit_range = 0; //TODO:
@@ -247,10 +251,23 @@ void autonomous() {
 
                 ip2p_params.dt = 2.0f; // millis
 
+                struct turn_params auton_turn_params;
+
+                struct within_range_data turn_range_data;
+                initialise_within_range_data(&turn_range_data);
+                turn_range_data.range = 0.01f;
+                turn_range_data.time = 100.0f;
+
+                auton_turn_params.turn_exit_range_data = &turn_range_data;
+                auton_turn_params.exit_range = 0;
+                auton_turn_params.max_speed = 1.0;
+                auton_turn_params.min_speed = 0.01;
+
+
                 set_motors_brake();
 
                 // LL P2P: Set these per movement!
-                struct p2p_command_data ip2p_command;
+                struct auton_command_data ip2p_command;
                 ip2p_command.timeout_millis = 1200.0f;
                 ip2p_command.reverse = false;
 

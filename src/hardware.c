@@ -33,12 +33,10 @@ hardware robot_hardware;
 void init_hardware() {
         new_motor_group_wrapper(&robot_hardware.MOTORGROUP_L,
                 motor_left_front,
-                motor_left_mid,
                 motor_left_rear);
 
         new_motor_group_wrapper(&robot_hardware.MOTORGROUP_R,
                 motor_right_front,
-                motor_right_mid,
                 motor_right_rear);
 
         atomic_init(&button_a_state, false);
@@ -72,14 +70,12 @@ void calibrate_imu() {
         screen_print(E_TEXT_MEDIUM, 1, "IMU is done calibrating (%d ms)\n", iter - time);
 }
 
-motor_group_wrapper new_motor_group_wrapper(motor_group_wrapper* m, int8_t m1, int8_t m2, int8_t m3) {
+motor_group_wrapper new_motor_group_wrapper(motor_group_wrapper* m, int8_t m1, int8_t m2) {
         m->m1 = m1;
         m->m2 = m2;
-        m->m3 = m3;
 }
 
 void set_motor_group_wrapper(motor_group_wrapper group, int speed) { // Actually more memory efficient to pass the wrapper directly (3x8 = 24 bits vs 32/64 bits for a pointer)
         motor_move((int8_t)group.m1, speed);
         motor_move((int8_t)group.m2, speed);
-        motor_move((int8_t)group.m3, speed);
 }

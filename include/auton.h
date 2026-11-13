@@ -30,7 +30,7 @@ struct pid_data {
         float prev_time;
 };
 
-struct p2p_command_data {
+struct auton_command_data {
         float timeout_millis;
         bool reverse;
 };
@@ -77,15 +77,29 @@ struct p2p_params {
         float dt;
 };
 
+struct turn_params {
+        struct within_range_data* turn_exit_range_data;
+
+        float exit_range;
+
+        float max_speed;
+        float min_speed;
+
+        struct pid_data* turn_pid;
+
+        float slew;
+        float dt;
+};
+
 
 void initialise_within_range_data(struct within_range_data* data);
 void initialise_pid_data(struct pid_data* data);
 
 // TODO: fix usage
-void improved_point_to_point(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params);
-void improved_auton_turn(struct auton_turn_target target, struct p2p_command_data cmd, struct p2p_params params); 
+void improved_point_to_point(vec2 target_pos, struct auton_command_data cmd, struct p2p_params params);
+void improved_auton_turn(struct auton_turn_target target, struct auton_command_data cmd, struct turn_params params);
 
 void set_motors_brake();
-void unset_motors_brake();      
+void unset_motors_brake();
 
 #endif
