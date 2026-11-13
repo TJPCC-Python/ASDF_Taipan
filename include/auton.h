@@ -31,7 +31,6 @@ struct pid_data {
 };
 
 struct p2p_command_data {
-        vec2 target;
         float timeout_millis;
         bool reverse;
 };
@@ -56,10 +55,15 @@ struct p2p_params {
 
 void initialise_within_range_data(struct within_range_data* data);
 void initialise_pid_data(struct pid_data* data);
-void auton_point_to_point(vec2 target, bool drive_reverse);
-void ll_point_to_point(struct p2p_command_data, struct p2p_params params);
+
+// TODO: fix usage
+void improved_point_to_point(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params);
+void improved_auton_turn(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params); 
+void improved_auton_turn(float target_heading, struct p2p_command_data cmd, struct p2p_params params); 
 
 void set_motors_brake();
 void unset_motors_brake();
+
 // void auton_read_sensors();
+void auton_point_to_point(vec2 target, bool drive_reverse);
 #endif

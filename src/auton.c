@@ -127,16 +127,30 @@ enum prev_side {
         PREVSIDE_SAME = 1
 };
 
+static enum slew_direction {
+        SLEW_DECREASING = -1,
+        SLEW_NONE = 0,
+        SLEW_INCREASING = 1
+};
+
 static float slew(float target, float curr, float max_delta, float dt) {
+        directional_slew(target, curr, max_delta, dt, SLEW_NONE);
+}
+
+
+static float directional_slew(float target, float curr, float max_delta, float dt, enum slew_direction dir) {
+        // TODO:
         if (max_delta == 0) return target;
 
         const float delta = target - curr;
+
+        if (dir == SLEW_INCREASING && delta < 0) return target;
+        if (dir == SLEW_DECREASING && delta > 0) return target; 
 
         if (fabs(delta) > fabs(max_delta * dt)) return curr + (max_delta * dt * sgn(delta));
 
         return target;
 }
-
 struct out_data
 {
         float err;
@@ -165,9 +179,10 @@ static float get_lat_out(struct out_data params) {
 }
 
 static float get_ang_out(struct out_data params) {
-        if (params.is_close) return 0;
+        if (params.is_close && fabsf(params.err) > 40.0f) return 0;
 
         float out = pid_data_update(params.pid, params.err);
+
         out = clamp(out, -params.max_speed, params.max_speed);
 
         out = slew(out, *params.prev_out, params.slew_amt, params.dt);
@@ -176,7 +191,6 @@ static float get_ang_out(struct out_data params) {
         return out;
 }
 
-
 #define ANGLE_TO(delta) (argd((delta)) - 90.0f)
 
 static vec2 desaturate_power(float lat, float ang) {
@@ -184,7 +198,7 @@ static vec2 desaturate_power(float lat, float ang) {
         out.x = lat - ang;
         out.y = lat + ang;
 
-        const float sum = fabs(out.x) + fabs(out.y);
+        const float sum = fmax(fabs(out.x), fabs(out.y));
         if (sum <= 1.0) return out;
 
         out.x /= sum;
@@ -192,10 +206,39 @@ static vec2 desaturate_power(float lat, float ang) {
         return out;
 }
 
-void ll_point_to_point(struct p2p_command_data cmd, struct p2p_params params) {
+static void internal_do_auton_turn() {
+        // Shared code
+}
+
+void improved_auton_turn(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params) {
+
+}
+
+void improved_auton_turn(float target_heading, struct p2p_command_data cmd, struct p2p_params params) {
+        // TODO:
+}
+
+void improved_point_to_point(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params) {
+        if (params.lat_exit_range_data != NULL) {
+                params.lat_exit_range_data->start_time = -1;
+                params.lat_exit_range_data->is_done = false;
+        }
+
+        if (params.lat_pid != NULL) {
+                params.lat_pid->integral = 0;
+                params.lat_pid->prev_err = 0;
+                params.lat_pid->prev_time = -1;
+        }
+
+        if (params.ang_pid != NULL) {
+                params.ang_pid->integral = 0;
+                params.ang_pid->prev_err = 0;
+                params.ang_pid->prev_time = -1;
+        }
+
         vec2 initial_delta;
-        initial_delta.x = cmd.target.x - atomic_load(&curr_x);
-        initial_delta.y = cmd.target.y - atomic_load(&curr_y);
+        initial_delta.x = target_pos.x - atomic_load(&curr_x);
+        initial_delta.y = target_pos.y - atomic_load(&curr_y);
 
         const float initial_angle = ANGLE_TO(initial_delta);
         const float start_millis = millis();
@@ -214,12 +257,12 @@ void ll_point_to_point(struct p2p_command_data cmd, struct p2p_params params) {
                 pos.x = atomic_load(&curr_x);
                 pos.y = atomic_load(&curr_y);
 
-                delta.x = cmd.target.x - pos.x;
-                delta.y = cmd.target.y - pos.y;
+                delta.x = target_pos.x - pos.x;
+                delta.y = target_pos.y - pos.y;
 
                 const float dist_to_target = get_mag(delta);
 
-                if (!is_close && dist_to_target < 200.0f) {
+                if (!is_close && dist_to_target < 20.0f) {
                         is_close = true;
 
                         params.max_lat_speed = fmax(fabs(prev_lat_out), 4.7);
@@ -233,7 +276,7 @@ void ll_point_to_point(struct p2p_command_data cmd, struct p2p_params params) {
 
                 if (within_range_for_time(lat_err, params.lat_exit_range_data) && is_close) break;
 
-                const bool side = (pos.y - cmd.target.y) * -sin(IN_RAD(initial_angle)) <= (pos.x - cmd.target.x) * cos(IN_RAD(initial_angle)) + params.exit_range;
+                const bool side = (pos.x - target_pos.x) * -sin(IN_RAD(initial_angle)) + (pos.y - target_pos.y) * cos(IN_RAD(initial_angle)) <= -params.exit_range;
                 if (previous_side == PREVSIDE_NONE) previous_side = (int)side;
                 const bool is_same_side = (side == (int)previous_side);
 
@@ -262,13 +305,17 @@ void ll_point_to_point(struct p2p_command_data cmd, struct p2p_params params) {
                 ang_out_params.is_close = is_close;
                 ang_out_params.dt = params.dt;
 
-                const float lat_out = get_lat_out(lat_out_params);
+                float lat_out = get_lat_out(lat_out_params);
                 const float ang_out = get_ang_out(ang_out_params);
 
-                screen_print(E_TEXT_MEDIUM, 3, "Moving with {%.3f} lat, {%.3f} ang", lat_out, ang_out);
-                screen_print(E_TEXT_MEDIUM, 4, "    ...{%.3f} lat err, {%.3f} ang err, {%.3f} dt", lat_err, ang_err, params.dt);
+                if (is_close)
+                        lat_out *= cosf(IN_RAD(ang_err));
 
                 const vec2 out = desaturate_power(lat_out, ang_out);
+
+                screen_print(E_TEXT_MEDIUM, 3, "Moving with {%.3f} lat, {%.3f} ang", lat_out, ang_out);
+                screen_print(E_TEXT_MEDIUM, 4, "...{%.3f} lat err, {%.3f} ang err, {%.3f} dt", lat_err, ang_err, params.dt);
+                screen_print(E_TEXT_MEDIUM, 5, "Power: {%.3f}, {%.3f}", out.x, out.y);
 
                 SPIN_DT_MOTORS(127.0f * out.x, 127.0f * out.y);
 

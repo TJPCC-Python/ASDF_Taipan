@@ -60,7 +60,6 @@ typedef enum {
 
         motor_lift_a = 2, // right
         motor_lift_b = -7,
-        motor_claw = 8,
 
         imu_port = 15,
         odom_para = 17,
@@ -79,7 +78,7 @@ static const int8_t DT_MOTOR_PORTS[DT_MOTOR_C] = {
 
 typedef enum {
         lim_switch_lift = 1,
-        claw = 6,
+        pneumo_claw = 6,
 } adi_ports;
 
 typedef struct

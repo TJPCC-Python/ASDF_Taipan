@@ -10,21 +10,7 @@
 
 controller_status ct_status;
 
-double claw_rest_pos = 0;
 bool is_claw_open = false;
-
-void save_claw_pos(void) {
-        claw_rest_pos = motor_get_position(motor_claw);
-
-        if (claw_rest_pos == PROS_ERR_F) {
-                printf("Saving the claw position failed, aborting...\n");
-                printf("Error: %s", errno);
-                exit(1);
-        } else
-                printf("Claw rest pos: %d\n", claw_rest_pos);
-
-        is_claw_open = false;
-}
 
 static bool isNoBumpersPressed(void) {
         return !ct_status.bumper_l1_state &&
@@ -48,6 +34,11 @@ void temp_spin_dt(int left_power, int right_power) {
 
 void temp_c_spin_motor(int motor, int power) {
         motor_move(motor, power);
+}
+
+
+void temp_c_brake_motor(int motor) {
+        motor_brake(motor);
 }
 
 void driver_read_input() {
@@ -130,19 +121,32 @@ void driver_apply_cheesy_input() {
         // TODO:
 }
 
+bool claw_state = false;
+
+void init_claw() {
+        adi_pin_mode(pneumo_claw, OUTPUT);
+        adi_digital_write(pneumo_claw, LOW);
+}
+
+void toggle_claw() {
+        claw_state = !claw_state;
+        adi_digital_write(pneumo_claw, claw_state ? HIGH : LOW);
+}
+
 void driver_apply_lift_input() {
         motor_set_brake_mode(motor_lift_a, E_MOTOR_BRAKE_BRAKE);
         motor_set_brake_mode(motor_lift_b, E_MOTOR_BRAKE_BRAKE);
-        motor_set_brake_mode(motor_claw, E_MOTOR_BRAKE_COAST);
-        motor_set_encoder_units(motor_claw, E_MOTOR_ENCODER_ROTATIONS);
         adi_port_set_config(1, E_ADI_DIGITAL_IN);
+
+        adi_pin_mode(pneumo_claw, OUTPUT);
+        adi_digital_write(pneumo_claw, LOW);
 
         float lift_control_factor = 0.85;
         float lift_bias = -3.0;
         float lift_delay = 0.0;
 
-        float claw_accuracy = 0.05;
-        float claw_passive_grab_power = 20.0;
+        float last_claw_press = 0.0;
+        float time_between_claw_presses = 250.0;
         bool claw_open = false;
 
         do {
@@ -176,12 +180,11 @@ void driver_apply_lift_input() {
                 //         motor_move(motor_claw, 0);
                 // }
 
-                if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_R1))
-                        motor_move(motor_claw, 127.0);
-                else if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_R2))
-                        motor_move(motor_claw, -127.0);
-                else
-                        motor_move(motor_claw, 0.0);
+                if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_X) && (millis() - last_claw_press) >= time_between_claw_presses) {
+                        adi_digital_write(pneumo_claw, claw_open ? LOW : HIGH);
+                        claw_open = !claw_open;
+                        last_claw_press = millis();
+                }
 
                 lift_delay -= (11.0 / 1000.0);
 

@@ -54,9 +54,6 @@ void init_hardware() {
         atomic_init(&axis_right_x, 0);
         atomic_init(&axis_left_y, 0);
         atomic_init(&axis_right_y, 0);
-
-        motor_set_encoder_units(motor_claw, E_MOTOR_ENCODER_ROTATIONS);
-        motor_set_zero_position(motor_claw, 0);
 }
 
 void calibrate_imu() {
