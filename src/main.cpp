@@ -209,19 +209,19 @@ void autonomous() {
 
                 init_claw();
 
-                struct p2p_params llp2p_params;
+                struct p2p_params ip2p_params;
                 struct within_range_data lat_range_data;
                 initialise_within_range_data(&lat_range_data);
                 lat_range_data.range = 5.0f; // if within 10 mms for 100 msec  //TODO:
                 lat_range_data.time = 200.0f; //TODO:
 
-                llp2p_params.lat_exit_range_data = &lat_range_data;
-                llp2p_params.exit_range = 0; //TODO:
+                ip2p_params.lat_exit_range_data = &lat_range_data;
+                ip2p_params.exit_range = 0; //TODO:
 
-                llp2p_params.max_lat_speed = 1.0; //TODO:
-                llp2p_params.min_lat_speed = 0.05; //TODO:
-                llp2p_params.max_ang_speed = 1.0; //TODO:
-                llp2p_params.min_ang_speed = 0.01; //TODO:
+                ip2p_params.max_lat_speed = 1.0; //TODO:
+                ip2p_params.min_lat_speed = 0.05; //TODO:
+                ip2p_params.max_ang_speed = 1.0; //TODO:
+                ip2p_params.min_ang_speed = 0.01; //TODO:
 
                 struct pid_data lat_pid;
                 struct pid_data ang_pid;
@@ -239,23 +239,23 @@ void autonomous() {
                 ang_pid.kd = 5.0; //TODO:
                 ang_pid.anti_windup_range = 100.0f; //TODO:
 
-                llp2p_params.lat_pid = &lat_pid;
-                llp2p_params.ang_pid = &ang_pid;
+                ip2p_params.lat_pid = &lat_pid;
+                ip2p_params.ang_pid = &ang_pid;
 
-                llp2p_params.lat_slew = 80.0f; //TODO:
-                llp2p_params.ang_slew = 0.0f; //TODO:
+                ip2p_params.lat_slew = 80.0f; //TODO:
+                ip2p_params.ang_slew = 0.0f; //TODO:
 
-                llp2p_params.dt = 2.0f; // millis
+                ip2p_params.dt = 2.0f; // millis
 
                 set_motors_brake();
 
                 // LL P2P: Set these per movement!
-                struct p2p_command_data llp2p_command;
-                llp2p_command.timeout_millis = 1200.0f;
-                llp2p_command.reverse = false;
+                struct p2p_command_data ip2p_command;
+                ip2p_command.timeout_millis = 1200.0f;
+                ip2p_command.reverse = false;
 
                 // Do the P2P
-                improved_point_to_point(vec2(0, 300), llp2p_command, llp2p_params);
+                improved_point_to_point(vec2(0, 300), ip2p_command, ip2p_params);
 
                 // deploy matchloader
                 temp_c_spin_motor(motor_lift_a, -110);
@@ -269,25 +269,25 @@ void autonomous() {
                 pros::delay(400);
 
                 // Toggle
-                llp2p_command.timeout_millis = 800.0f;
-                llp2p_command.reverse = true;
-                improved_point_to_point(vec2(0, -120), llp2p_command, llp2p_params);
-                llp2p_command.reverse = false;
-                improved_point_to_point(vec2(0, 300), llp2p_command, llp2p_params);
-                llp2p_command.reverse = true;
-                improved_point_to_point(vec2(0, -120), llp2p_command, llp2p_params);
+                ip2p_command.timeout_millis = 800.0f;
+                ip2p_command.reverse = true;
+                improved_point_to_point(vec2(0, -120), ip2p_command, ip2p_params);
+                ip2p_command.reverse = false;
+                improved_point_to_point(vec2(0, 300), ip2p_command, ip2p_params);
+                ip2p_command.reverse = true;
+                improved_point_to_point(vec2(0, -120), ip2p_command, ip2p_params);
 
-                llp2p_command.reverse = false;
-                improved_point_to_point(vec2(0, 200), llp2p_command, llp2p_params);
+                ip2p_command.reverse = false;
+                improved_point_to_point(vec2(0, 200), ip2p_command, ip2p_params);
 
                 // Score preload
-                llp2p_command.timeout_millis = 1000.0f;
-                // llp2p_command.target_pos = vec2(-100, 300);
-                // improved_point_to_point(llp2p_command, llp2p_params);
+                ip2p_command.timeout_millis = 1000.0f;
+                // ip2p_command.target_pos = vec2(-100, 300);
+                // improved_point_to_point(ip2p_command, ip2p_params);
 
-                // llp2p_command.reverse = true;
-                // llp2p_command.target_pos = vec2(-100, -200);
-                // improved_point_to_point(llp2p_command, llp2p_params);
+                // ip2p_command.reverse = true;
+                // ip2p_command.target_pos = vec2(-100, -200);
+                // improved_point_to_point(ip2p_command, ip2p_params);
 
                 temp_c_spin_motor(motor_lift_a, -100);
                 temp_c_spin_motor(motor_lift_b, -100);
@@ -295,9 +295,9 @@ void autonomous() {
                 temp_c_brake_motor(motor_lift_a);
                 temp_c_brake_motor(motor_lift_b);
 
-                llp2p_command.reverse = false;
-                llp2p_command.timeout_millis = 1000.0f;
-                improved_point_to_point(vec2(-100, 300), llp2p_command, llp2p_params);
+                ip2p_command.reverse = false;
+                ip2p_command.timeout_millis = 1000.0f;
+                improved_point_to_point(vec2(-100, 300), ip2p_command, ip2p_params);
 
                 temp_c_spin_motor(motor_lift_a, 80);
                 temp_c_spin_motor(motor_lift_b, 80);
