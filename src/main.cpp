@@ -161,7 +161,6 @@ void autonomous() {
 
         printf("Tasks: %d\n", pros::Task::get_count());
 
-        // pros::Task auton_sensor_task(auton_read_sensors, "AUTON SENSOR READ");
         pros::Task dead_reckoning_task(dead_reckoning_position_tracker, "AUTON DEAD RECKON / POS TRACKER");
 #ifdef USE_TAIPAN
         if (params->func != NULL) {
@@ -529,7 +528,6 @@ void autonomous() {
                 pros::Task driver_read_input_handler(driver_read_input, "DRIVER INPUT READ");
                 pros::Task driver_apply_dt_input_handler(driver_apply_dt_input, "DRIVER DT CTRL");
                 pros::Task driver_appliy_lift_input_handler(driver_apply_lift_input, "DRIVER LIFT CTRL");
-                // pros::Task auton_sensor_task(auton_read_sensors, "AUTON SENSOR READ");
 
                 while (true) {
                         pros::screen::print(TEXT_MEDIUM, 1, "Pos: (%.3f,   %.3f)", odom_sys.get_position().x, odom_sys.get_position().y);

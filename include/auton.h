@@ -64,6 +64,4 @@ void improved_auton_turn(float target_heading, struct p2p_command_data cmd, stru
 void set_motors_brake();
 void unset_motors_brake();
 
-// void auton_read_sensors();
-void auton_point_to_point(vec2 target, bool drive_reverse);
 #endif
