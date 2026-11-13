@@ -98,7 +98,7 @@ typedef struct hardware
 extern hardware robot_hardware;
 
 void init_hardware();
-motor_group_wrapper new_motor_group_wrapper(motor_group_wrapper* m, int8_t m1, int8_t m2, int8_t m3);
+motor_group_wrapper new_motor_group_wrapper(motor_group_wrapper* m, int8_t m1, int8_t m2);
 void set_motor_group_wrapper(motor_group_wrapper group, int speed);
 
 void calibrate_imu(void);

@@ -91,6 +91,29 @@ struct turn_params {
         float dt;
 };
 
+struct p2p_turn_params {
+        struct within_range_data* lat_exit_range_data;
+        struct within_range_data* ang_exit_range_data;
+
+        float exit_range;
+
+        float max_lat_speed;
+        float min_lat_speed;
+        float max_ang_speed;
+        float min_ang_speed;
+
+        struct pid_data* lat_pid;
+        struct pid_data* ang_pid;
+
+        float lat_slew;
+        float ang_slew;
+
+        float lead;
+        float drift_compensation;
+
+        float dt;
+};
+
 
 void initialise_within_range_data(struct within_range_data* data);
 void initialise_pid_data(struct pid_data* data);

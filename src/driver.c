@@ -24,11 +24,9 @@ void temp_spin_dt(int left_power, int right_power) {
         // set_motor_group_wrapper(robot_hardware.MOTORGROUP_L, right_power);
 
         motor_move(motor_left_front, left_power);
-        motor_move(motor_left_mid, left_power);
         motor_move(motor_left_rear, left_power);
 
         motor_move(motor_right_front, right_power);
-        motor_move(motor_right_mid, right_power);
         motor_move(motor_right_rear, right_power);
 }
 
@@ -100,11 +98,9 @@ void driver_apply_dt_input() {
 
 
                 motor_move(motor_left_front, dt_left);
-                motor_move(motor_left_mid, dt_left);
                 motor_move(motor_left_rear, dt_left);
 
                 motor_move(motor_right_front, dt_right);
-                motor_move(motor_right_mid, dt_right);
                 motor_move(motor_right_rear, dt_right);
 
                 delay(9);

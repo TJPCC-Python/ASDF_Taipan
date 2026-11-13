@@ -598,10 +598,8 @@ static InterpretResult run(void* abort_flag, void* main_handle, void* vm_clean) 
                                 int power = AS_NUMBER(pop());
 
                                 motor_move(motor_left_front, power);
-                                motor_move(motor_left_mid, power);
                                 motor_move(motor_left_rear, power);
                                 motor_move(motor_right_front, power);
-                                motor_move(motor_right_mid, power);
                                 motor_move(motor_right_rear, power);
                                 break;
                         }
@@ -610,10 +608,8 @@ static InterpretResult run(void* abort_flag, void* main_handle, void* vm_clean) 
                                 int turn_diff = 0.5 * AS_NUMBER(pop());
 
                                 motor_move(motor_left_front, turn_diff);
-                                motor_move(motor_left_mid, turn_diff);
                                 motor_move(motor_left_rear, turn_diff);
                                 motor_move(motor_right_front, -turn_diff);
-                                motor_move(motor_right_mid, -turn_diff);
                                 motor_move(motor_right_rear, -turn_diff);
                                 break;
                         }
