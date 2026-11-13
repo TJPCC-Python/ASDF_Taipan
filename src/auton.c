@@ -95,12 +95,15 @@ static float pid_data_update(struct pid_data* pid, float err) {
         return prop + integ + deriv;
 }
 
-static float get_angle_err(float t_angle, float actual_angle) {
+static float get_angle_err(float t_angle, float actual_angle, enum turn_dir dir) {
         while (t_angle < 0) t_angle += 360;
         while (t_angle > 360) t_angle -= 360;
 
-        float err = t_angle - actual_angle;
-        return remainderf(err, 360);
+        float error = t_angle - actual_angle;
+        if (dir == TURN_NONE) return remainderf(error, 360);
+
+        if (dir == TURN_CCW) return error < 0 ? error + 360 : error;
+        else return error > 0 ? error - 360 : error;
 }
 
 static bool within_range_for_time(float input, struct within_range_data* data) {
@@ -139,18 +142,18 @@ static float slew(float target, float curr, float max_delta, float dt) {
 
 
 static float directional_slew(float target, float curr, float max_delta, float dt, enum slew_direction dir) {
-        // TODO:
         if (max_delta == 0) return target;
 
         const float delta = target - curr;
 
         if (dir == SLEW_INCREASING && delta < 0) return target;
-        if (dir == SLEW_DECREASING && delta > 0) return target; 
+        if (dir == SLEW_DECREASING && delta > 0) return target;
 
         if (fabs(delta) > fabs(max_delta * dt)) return curr + (max_delta * dt * sgn(delta));
 
         return target;
 }
+
 struct out_data
 {
         float err;
@@ -206,16 +209,58 @@ static vec2 desaturate_power(float lat, float ang) {
         return out;
 }
 
-static void internal_do_auton_turn() {
-        // Shared code
+static float calc_angle_err(struct auton_turn_target target) {
+        if (target.is_position) return ANGLE_TO(target.as.position);
+        else return get_angle_err(target.as.heading, atomic_load(&heading), TURN_NONE);
 }
 
-void improved_auton_turn(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params) {
+static enum slew_direction get_slew_dir(struct auton_turn_target target) {
+        if (target.dir == TURN_CCW) return SLEW_INCREASING;
+        if (target.dir == TURN_CW) return SLEW_DECREASING;
 
+        float error = calc_angle_err(target);
+        if (error > 0) return SLEW_INCREASING;
+        else return SLEW_DECREASING;
 }
 
-void improved_auton_turn(float target_heading, struct p2p_command_data cmd, struct p2p_params params) {
-        // TODO:
+struct motor_brake_set {
+        motor_brake_mode_e_t lf;
+        motor_brake_mode_e_t lr;
+
+        motor_brake_mode_e_t rf;
+        motor_brake_mode_e_t rr;
+};
+
+// TODO: Check drive motor ports
+
+static void get_motor_brake_status(struct motor_brake_set* brake_status) {
+        brake_status->lf = motor_get_brake_mode(motor_left_front);
+        brake_status->lr = motor_get_brake_mode(motor_left_rear);
+
+        brake_status->rf = motor_get_brake_mode(motor_right_front);
+        brake_status->rr = motor_get_brake_mode(motor_right_rear);
+}
+
+static void set_motor_brake_status(struct motor_brake_set brake_status) {
+
+};
+
+void improved_auton_turn(struct auton_turn_target target, struct p2p_command_data cmd, struct p2p_params params) {
+        // TODO: reset structs
+
+        const enum slew_direction slew_dir = get_slew_dir(target);
+
+        float prev_raw_dtheta = 0;
+        float prev_dtheta = 0;
+        bool has_prev_raw_dtheta = false;
+        bool has_prev_dtheta = false;
+
+        float dtheta = INFINITY;
+        bool is_settling = false;
+        float prev_motor_power = 0;
+
+        // Restore the brake modes of the motors
+        const motor_brake_mode_e_t left_brake_mode = motor_get_brake_mode(motor_left_mid);
 }
 
 void improved_point_to_point(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params) {
@@ -271,8 +316,8 @@ void improved_point_to_point(vec2 target_pos, struct p2p_command_data cmd, struc
 
                 float h = atomic_load(&heading);
 
-                const float lat_err = dist_to_target * cos(IN_RAD(get_angle_err(h, ANGLE_TO(delta))));
-                const float ang_err = get_angle_err(cmd.reverse ? h + 180.0f : h, ANGLE_TO(delta));
+                const float lat_err = dist_to_target * cos(IN_RAD(get_angle_err(h, ANGLE_TO(delta), TURN_NONE)));
+                const float ang_err = get_angle_err(cmd.reverse ? h + 180.0f : h, ANGLE_TO(delta), TURN_NONE);
 
                 if (within_range_for_time(lat_err, params.lat_exit_range_data) && is_close) break;
 

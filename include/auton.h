@@ -35,6 +35,30 @@ struct p2p_command_data {
         bool reverse;
 };
 
+enum turn_dir {
+        TURN_CCW = -1,
+        TURN_NONE = 0,
+        TURN_CW = 1
+};
+
+enum locked_side {
+        LOCKED_LEFT = -1,
+        LOCKED_NONE = 0,
+        LOCKED_RIGHT = 1
+};
+
+struct auton_turn_target {
+        bool is_position;
+        union as
+        {
+                vec2 position;
+                float heading;
+        } as;
+
+        enum turn_dir dir;
+        enum locked_side lock_side;
+};
+
 struct p2p_params {
         struct within_range_data* lat_exit_range_data;
         float exit_range;
@@ -53,15 +77,15 @@ struct p2p_params {
         float dt;
 };
 
+
 void initialise_within_range_data(struct within_range_data* data);
 void initialise_pid_data(struct pid_data* data);
 
 // TODO: fix usage
 void improved_point_to_point(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params);
-void improved_auton_turn(vec2 target_pos, struct p2p_command_data cmd, struct p2p_params params); 
-void improved_auton_turn(float target_heading, struct p2p_command_data cmd, struct p2p_params params); 
+void improved_auton_turn(struct auton_turn_target target, struct p2p_command_data cmd, struct p2p_params params); 
 
 void set_motors_brake();
-void unset_motors_brake();
+void unset_motors_brake();      
 
 #endif
