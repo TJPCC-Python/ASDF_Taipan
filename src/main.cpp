@@ -251,12 +251,11 @@ void autonomous() {
 
                 // LL P2P: Set these per movement!
                 struct p2p_command_data llp2p_command;
-                llp2p_command.target_pos = vec2(0, 300);
                 llp2p_command.timeout_millis = 1200.0f;
                 llp2p_command.reverse = false;
 
                 // Do the P2P
-                improved_point_to_point(llp2p_command, llp2p_params);
+                improved_point_to_point(vec2(0, 300), llp2p_command, llp2p_params);
 
                 // deploy matchloader
                 temp_c_spin_motor(motor_lift_a, -110);
@@ -271,19 +270,15 @@ void autonomous() {
 
                 // Toggle
                 llp2p_command.timeout_millis = 800.0f;
-                llp2p_command.target_pos = vec2(0, -120);
                 llp2p_command.reverse = true;
-                improved_point_to_point(llp2p_command, llp2p_params);
-                llp2p_command.target_pos = vec2(0, 300);
+                improved_point_to_point(vec2(0, -120), llp2p_command, llp2p_params);
                 llp2p_command.reverse = false;
-                improved_point_to_point(llp2p_command, llp2p_params);
-                llp2p_command.target_pos = vec2(0, -120);
+                improved_point_to_point(vec2(0, 300), llp2p_command, llp2p_params);
                 llp2p_command.reverse = true;
-                improved_point_to_point(llp2p_command, llp2p_params);
+                improved_point_to_point(vec2(0, -120), llp2p_command, llp2p_params);
 
-                llp2p_command.target_pos = vec2(0, 200);
                 llp2p_command.reverse = false;
-                improved_point_to_point(llp2p_command, llp2p_params);
+                improved_point_to_point(vec2(0, 200), llp2p_command, llp2p_params);
 
                 // Score preload
                 llp2p_command.timeout_millis = 1000.0f;
@@ -302,8 +297,7 @@ void autonomous() {
 
                 llp2p_command.reverse = false;
                 llp2p_command.timeout_millis = 1000.0f;
-                llp2p_command.target_pos = vec2(-100, 300);
-                improved_point_to_point(llp2p_command, llp2p_params);
+                improved_point_to_point(vec2(-100, 300), llp2p_command, llp2p_params);
 
                 temp_c_spin_motor(motor_lift_a, 80);
                 temp_c_spin_motor(motor_lift_b, 80);
